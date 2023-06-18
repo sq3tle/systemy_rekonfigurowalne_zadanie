@@ -144,6 +144,9 @@ public
 			start_brewing_conn : port ui_manager.start_brewing_out -> brewing_controler.start_brewing_in;
 			selected_drink_conn: port ui_manager.selected_drink_out -> brewing_controler.selected_drink_in;
 			
+			report_error_conn: port brewing_controler.report_error_out -> ui_manager.report_error_in;
+			error_data_conn: port brewing_controler.error_data_out -> ui_manager.error_data_in;
+			
 			-- user_interface
 			
 			image_data_conn: port ui_manager.image_data -> image_data;
@@ -169,6 +172,8 @@ public
 			heater_on_off_out_conn: port brewing_controler.heater_on_off_out -> heater_on_off_out;
 			grinder_on_off_out_conn: port brewing_controler.grinder_on_off_out -> grinder_on_off_out;
 			pump_on_off_out_conn: port brewing_controler.pump_on_off_out -> pump_on_off_out;
+			
+
 
 	end Controller.impl;
 
@@ -181,6 +186,8 @@ public
 			refresh_screen: out event port;
 			selected_drink_out: out data port; 
 			start_brewing_out: out event port;
+			report_error_in: in event port; 
+			error_data_in: in data port;
 		properties
 			Dispatch_Protocol => Periodic;
 			Period => 50 ms;
@@ -205,6 +212,8 @@ public
 			pump_on_off_out: out event port;
 			selected_drink_in: in data port; 
 			start_brewing_in: in event port;
+			report_error_out: out event port; 
+			error_data_out: out data port;
 		properties
 			Dispatch_Protocol => Periodic;
 			Period => 50 ms;
