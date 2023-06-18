@@ -1,0 +1,25 @@
+package mcu
+public
+	with buses;
+	
+	processor riscv
+		features
+			bus_i2c: requires bus access buses::i2c;
+			bus_spi: requires bus access buses::spi;
+			bus_gpio: requires bus access buses::gpio;
+			bus_wishbone: requires bus access buses::wishbone;
+			
+		properties
+			Scheduling_Protocol => (RMS);
+	end riscv;
+
+	memory ram
+		features
+			bus_wishbone: requires bus access buses::wishbone;
+	end ram;
+	
+	memory nvm
+		features
+			bus_wishbone: requires bus access buses::wishbone;
+	end nvm;
+end mcu;

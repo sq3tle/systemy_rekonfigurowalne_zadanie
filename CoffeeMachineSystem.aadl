@@ -1,0 +1,311 @@
+package CoffeeMachineSystem
+public
+	with buses;
+	with mcu;
+	
+	system CoffeeMachineSystem
+	end CoffeeMachineSystem;
+
+	system implementation CoffeeMachineSystem.impl
+		subcomponents
+			
+			cpu: processor mcu::riscv;
+			ram: memory mcu::ram;
+			nvm: memory mcu::nvm;
+			i2c: bus buses::i2c;
+			spi: bus buses::spi;
+			gpio: bus buses::gpio;
+			wishbone: bus buses::wishbone;
+			
+			-- input_devs
+			
+			device_WaterTank: device WaterTank;
+			device_WaterFlowMeter: device WaterFlowMeter;
+			device_BoilerTemperatureSensor_top: device BoilerTemperatureSensor;
+			device_BoilerTemperatureSensor_bottom: device BoilerTemperatureSensor;
+			device_BoilerTemperatureSensor_center: device BoilerTemperatureSensor;
+			device_WasteTankSensor: device WasteTankSensor;
+			device_BeanContainer: device BeanContainer;
+			
+			-- output_devs
+			
+			device_Pump: device Pump;
+			device_BeanGrinder: device BeanGrinder;
+			device_BoilerHeater: device BoilerHeater;
+			
+			-- user_interface_devices
+			
+			device_OledScreen: device OledScreen;
+			device_InputButtonMatrix: device InputButtonMatrix;
+			
+			-- processes
+			
+			cfs_controler: process Controller;
+
+		connections
+			-- cpu_buses
+			
+			bus_cpu_i2c: bus access i2c -> cpu.bus_i2c;
+			bus_cpu_spi: bus access spi -> cpu.bus_spi;
+			bus_cpu_gpio: bus access gpio -> cpu.bus_gpio;
+			bus_cpu_wishbone: bus access wishbone -> cpu.bus_wishbone;
+			
+			-- memory_buses
+			
+			bus_ram_wishbone: bus access wishbone -> ram.bus_wishbone;
+			bus_nvm_wishbone: bus access wishbone -> nvm.bus_wishbone;
+			
+			-- input_devs
+			
+			bus_device_WaterTank: bus access i2c -> device_WaterTank.bus_i2c;
+			WaterTank_empty_conn: port device_WaterTank.empty -> cfs_controler.empty_WaterTank_in;
+			WaterTank_level_conn: port device_WaterTank.water_level -> cfs_controler.data_WaterLevel_in;
+			
+			bus_device_WaterFlowMeter: bus access i2c -> device_WaterFlowMeter.bus_i2c;
+			WaterFlowMeter_flow_conn: port device_WaterFlowMeter.water_flow -> cfs_controler.data_WaterFlow_in;
+			
+			bus_device_BoilerTemperatureSensor_top: bus access i2c -> device_BoilerTemperatureSensor_top.bus_i2c;
+			BoilerTemperatureSensor_temp_top_conn: port device_BoilerTemperatureSensor_top.water_temperature -> cfs_controler.data_Temperature_top_in;
+			
+			bus_device_BoilerTemperatureSensor_bottom: bus access i2c -> device_BoilerTemperatureSensor_bottom.bus_i2c;
+			BoilerTemperatureSensor_temp_bottom_conn: port device_BoilerTemperatureSensor_bottom.water_temperature -> cfs_controler.data_Temperature_bottom_in;
+			
+			bus_device_BoilerTemperatureSensor_center: bus access i2c -> device_BoilerTemperatureSensor_center.bus_i2c;
+			BoilerTemperatureSensor_temp_center_conn: port device_BoilerTemperatureSensor_center.water_temperature -> cfs_controler.data_Temperature_center_in;
+			
+			bus_device_WasteTankSensor: bus access i2c -> device_WasteTankSensor.bus_i2c;
+			WasteTankSensor_full_conn: port device_WasteTankSensor.full -> cfs_controler.full_WasteTankSensor_in;
+			
+			bus_device_BeanContainer: bus access i2c -> device_BeanContainer.bus_i2c;
+			BeanContainer_empty_conn: port device_BeanContainer.empty -> cfs_controler.empty_BeanContainer_in;
+			
+			-- output_devs
+			
+			bus_device_Pump: bus access gpio -> device_Pump.bus_gpio;
+			Pump_on_off_conn: port cfs_controler.pump_on_off_out -> device_Pump.pump_on_off;
+			
+			bus_device_BoilerHeater: bus access gpio -> device_BoilerHeater.bus_gpio;
+			cfs_controler_heater_on_off_conn: port cfs_controler.heater_on_off_out -> device_BoilerHeater.heater_on_off;
+			
+			bus_device_BeanGrinder: bus access gpio -> device_BeanGrinder.bus_gpio;
+			Controller_grinder_on_off_conn: port cfs_controler.grinder_on_off_out -> device_BeanGrinder.grider_on_off;
+			
+			-- user_interface_devices
+			
+			bus_device_OledScreen: bus access spi -> device_OledScreen.bus_spi;
+			Controller_refresh_screen_conn: port cfs_controler.refresh_screen -> device_OledScreen.refresh;
+			Controller_image_data_conn: port cfs_controler.image_data -> device_OledScreen.image_data;
+			
+			bus_device_InputButtonMatrix: bus access gpio -> device_InputButtonMatrix.bus_gpio;
+			InputButtonMatrix_up_conn: port device_InputButtonMatrix.button_up_clicked -> cfs_controler.button_up_in;
+			InputButtonMatrix_down_conn: port device_InputButtonMatrix.button_down_clicked -> cfs_controler.button_down_in;
+			InputButtonMatrix_select_conn: port device_InputButtonMatrix.button_select_clicked -> cfs_controler.button_select_in;
+
+		modes
+	      NormalOperation: initial mode;
+	      Cleaning: mode;
+	      Maintenance: mode;
+	      
+	    properties
+			Actual_Processor_Binding => (reference (cpu)) applies to cfs_controler;
+			Actual_Memory_Binding => (reference (ram)) applies to cfs_controler;
+			
+			
+	end CoffeeMachineSystem.impl;
+
+	process Controller			
+		
+		features
+			data_WaterLevel_in: in data port;
+			data_WaterFlow_in: in data port;
+			data_Temperature_top_in: in data port;
+			data_Temperature_bottom_in: in data port;
+			data_Temperature_center_in: in data port;
+			image_data: out data port;
+			empty_WaterTank_in: in event port;
+			empty_BeanContainer_in: in event port;
+			full_WasteTankSensor_in: in event port;
+			heater_on_off_out: out event port;
+			grinder_on_off_out: out event port;
+			pump_on_off_out: out event port;
+			refresh_screen: out event port;
+			button_up_in: in event port;
+			button_down_in: in event port;
+			button_select_in: in event port;
+	end Controller;
+
+	process implementation Controller.impl
+		subcomponents
+			ui_manager: thread UserInterfaceManager;
+			brewing_controler: thread brewingControler;
+		connections
+			-- internal 
+			
+			start_brewing_conn : port ui_manager.start_brewing_out -> brewing_controler.start_brewing_in;
+			selected_drink_conn: port ui_manager.selected_drink_out -> brewing_controler.selected_drink_in;
+			
+			-- user_interface
+			
+			image_data_conn: port ui_manager.image_data -> image_data;
+			refresh_screen_conn: port ui_manager.refresh_screen -> refresh_screen;
+			
+			button_up_conn : port button_up_in -> ui_manager.button_up_in;
+			button_down_conn : port button_down_in -> ui_manager.button_down_in;
+			button_select_conn : port button_select_in -> ui_manager.button_select_in;
+			
+			-- controler_interface
+			
+			data_WaterLevel_in_conn: port data_WaterLevel_in ->brewing_controler.data_WaterLevel_in;
+			data_WaterFlow_in_conn: port data_WaterFlow_in ->brewing_controler.data_WaterFlow_in;
+			
+			data_Temperature_top_in_conn: port data_Temperature_top_in ->brewing_controler.data_Temperature_top_in;
+			data_Temperature_bottom_in_conn: port data_Temperature_bottom_in ->brewing_controler.data_Temperature_bottom_in;
+			data_Temperature_center_in_conn: port data_Temperature_center_in ->brewing_controler.data_Temperature_center_in;
+
+			empty_WaterTank_in_conn: port empty_WaterTank_in ->brewing_controler.empty_WaterTank_in;
+			empty_BeanContainer_in_conn: port empty_BeanContainer_in ->brewing_controler.empty_BeanContainer_in;
+			full_WasteTankSensor_in_conn: port full_WasteTankSensor_in ->brewing_controler.full_WasteTankSensor_in;
+			
+			heater_on_off_out_conn: port brewing_controler.heater_on_off_out -> heater_on_off_out;
+			grinder_on_off_out_conn: port brewing_controler.grinder_on_off_out -> grinder_on_off_out;
+			pump_on_off_out_conn: port brewing_controler.pump_on_off_out -> pump_on_off_out;
+
+	end Controller.impl;
+
+	thread UserInterfaceManager
+		features
+			image_data: out data port;
+			button_up_in: in event port;
+			button_down_in: in event port;
+			button_select_in: in event port;
+			refresh_screen: out event port;
+			selected_drink_out: out data port; 
+			start_brewing_out: out event port;
+		properties
+			Dispatch_Protocol => Periodic;
+			Period => 50 ms;
+			Priority => 2;
+	end UserInterfaceManager;
+
+	thread implementation UserInterfaceManager.impl
+	end UserInterfaceManager.impl;
+
+	thread brewingControler
+		features
+			data_WaterLevel_in: in data port;
+			data_WaterFlow_in: in data port;
+			data_Temperature_top_in: in data port;
+			data_Temperature_bottom_in: in data port;
+			data_Temperature_center_in: in data port;
+			empty_WaterTank_in: in event port;
+			empty_BeanContainer_in: in event port;
+			full_WasteTankSensor_in: in event port;
+			heater_on_off_out: out event port;
+			grinder_on_off_out: out event port;
+			pump_on_off_out: out event port;
+			selected_drink_in: in data port; 
+			start_brewing_in: in event port;
+		properties
+			Dispatch_Protocol => Periodic;
+			Period => 50 ms;
+			Priority => 1;
+	end brewingControler;
+
+	thread implementation brewingControler.impl
+	end brewingControler.impl;
+
+	device Pump
+		features
+			pump_on_off: in event port;
+			bus_gpio: requires bus access buses::gpio;
+	end Pump;
+
+	device implementation Pump.impl
+	end Pump.impl;
+
+	device WaterTank
+		features
+			water_level: out data port;
+			empty: out event port;
+			bus_i2c: requires bus access buses::i2c;
+	end WaterTank;
+
+	device implementation WaterTank.impl
+	end WaterTank.impl;
+
+	device WaterFlowMeter
+		features
+			water_flow: out data port;
+			bus_i2c: requires bus access buses::i2c;
+	end WaterFlowMeter;
+
+	device implementation WaterFlowMeter.impl
+	end WaterFlowMeter.impl;
+
+	device BoilerHeater
+		features
+			heater_on_off: in event port;
+			bus_gpio: requires bus access buses::gpio;
+	end BoilerHeater;
+
+	device implementation BoilerHeater.impl
+	end BoilerHeater.impl;
+
+	device BoilerTemperatureSensor
+		features
+			water_temperature: out data port;
+			bus_i2c: requires bus access buses::i2c;			
+	end BoilerTemperatureSensor;
+
+	device implementation BoilerTemperatureSensor.impl
+	end BoilerTemperatureSensor.impl;
+
+	device BeanContainer
+		features
+			empty: out event port;
+			bus_i2c: requires bus access buses::i2c;
+	end BeanContainer;
+
+	device implementation BeanContainer.impl
+	end BeanContainer.impl;
+
+	device BeanGrinder
+		features
+			grider_on_off: in event port;
+			bus_gpio: requires bus access buses::gpio;
+	end BeanGrinder;
+
+	device implementation BeanGrinder.impl
+	end BeanGrinder.impl;
+
+	device WasteTankSensor
+		features
+			full: out event port;
+			bus_i2c: requires bus access buses::i2c;
+	end WasteTankSensor;
+
+	device implementation WasteTankSensor.impl
+	end WasteTankSensor.impl;
+
+	device OledScreen
+		features
+			image_data: in data port;
+			refresh: in event port;
+			bus_spi: requires bus access buses::spi;
+	end OledScreen;
+
+	device implementation OledScreen.impl
+	end OledScreen.impl;
+
+	device InputButtonMatrix
+		features
+			button_up_clicked: out event port;
+			button_down_clicked: out event port;
+			button_select_clicked: out event port;
+			bus_gpio: requires bus access buses::gpio;
+	end InputButtonMatrix;
+
+	device implementation InputButtonMatrix.impl
+	end InputButtonMatrix.impl;
+	
+	end CoffeeMachineSystem;

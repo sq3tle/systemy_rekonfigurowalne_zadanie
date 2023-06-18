@@ -1,0 +1,14 @@
+package buses
+public
+	bus Gpio
+	end Gpio;
+
+	bus I2C
+	end I2C;
+	
+	bus SPI
+	end SPI;
+	
+	bus Wishbone
+	end Wishbone;
+end buses;
