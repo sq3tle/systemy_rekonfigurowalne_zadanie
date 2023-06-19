@@ -186,7 +186,7 @@ public
 			button_down_in: in event port;
 			button_select_in: in event port;
 			refresh_screen: out event port;
-			selected_drink_out: out data port base_types::String; 
+			selected_drink_out: out data port  base_types::String; 
 			start_brewing_out: out event port;
 			report_error_in: in event port; 
 			error_data_in: in data port base_types::String;
@@ -236,7 +236,7 @@ public
 
 	device WaterTank
 		features
-			water_level: out data port;
+			water_level: out data port base_types::Float;
 			empty: out event port;
 			bus_i2c: requires bus access buses::i2c;
 	end WaterTank;
@@ -246,7 +246,7 @@ public
 
 	device WaterFlowMeter
 		features
-			water_flow: out data port;
+			water_flow: out data port base_types::Float;
 			bus_i2c: requires bus access buses::i2c;
 	end WaterFlowMeter;
 
@@ -264,7 +264,7 @@ public
 
 	device BoilerTemperatureSensor
 		features
-			water_temperature: out data port;
+			water_temperature: out data port base_types::Float;
 			bus_i2c: requires bus access buses::i2c;			
 	end BoilerTemperatureSensor;
 
