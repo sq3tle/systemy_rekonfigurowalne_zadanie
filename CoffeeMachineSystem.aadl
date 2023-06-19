@@ -2,6 +2,7 @@ package CoffeeMachineSystem
 public
 	with buses;
 	with mcu;
+	with base_types;
 	
 	system CoffeeMachineSystem
 	end CoffeeMachineSystem;
@@ -113,14 +114,15 @@ public
 			
 	end CoffeeMachineSystem.impl;
 
+
 	process Controller			
 		
 		features
-			data_WaterLevel_in: in data port;
-			data_WaterFlow_in: in data port;
-			data_Temperature_top_in: in data port;
-			data_Temperature_bottom_in: in data port;
-			data_Temperature_center_in: in data port;
+			data_WaterLevel_in: in data port base_types::Float;
+			data_WaterFlow_in: in data port base_types::Float;
+			data_Temperature_top_in: in data port base_types::Float;
+			data_Temperature_bottom_in: in data port base_types::Float;
+			data_Temperature_center_in: in data port base_types::Float;
 			image_data: out data port;
 			empty_WaterTank_in: in event port;
 			empty_BeanContainer_in: in event port;
@@ -184,10 +186,10 @@ public
 			button_down_in: in event port;
 			button_select_in: in event port;
 			refresh_screen: out event port;
-			selected_drink_out: out data port; 
+			selected_drink_out: out data port base_types::String; 
 			start_brewing_out: out event port;
 			report_error_in: in event port; 
-			error_data_in: in data port;
+			error_data_in: in data port base_types::String;
 		properties
 			Dispatch_Protocol => Periodic;
 			Period => 50 ms;
@@ -199,21 +201,21 @@ public
 
 	thread brewingControler
 		features
-			data_WaterLevel_in: in data port;
-			data_WaterFlow_in: in data port;
-			data_Temperature_top_in: in data port;
-			data_Temperature_bottom_in: in data port;
-			data_Temperature_center_in: in data port;
+			data_WaterLevel_in: in data port base_types::Float;
+			data_WaterFlow_in: in data port base_types::Float;
+			data_Temperature_top_in: in data port base_types::Float;
+			data_Temperature_bottom_in: in data port base_types::Float;
+			data_Temperature_center_in: in data port base_types::Float;
 			empty_WaterTank_in: in event port;
 			empty_BeanContainer_in: in event port;
 			full_WasteTankSensor_in: in event port;
 			heater_on_off_out: out event port;
 			grinder_on_off_out: out event port;
 			pump_on_off_out: out event port;
-			selected_drink_in: in data port; 
+			selected_drink_in: in data port base_types::String; 
 			start_brewing_in: in event port;
 			report_error_out: out event port; 
-			error_data_out: out data port;
+			error_data_out: out data port base_types::String;
 		properties
 			Dispatch_Protocol => Periodic;
 			Period => 50 ms;
