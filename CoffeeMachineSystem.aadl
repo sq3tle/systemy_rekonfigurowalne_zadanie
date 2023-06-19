@@ -115,6 +115,10 @@ public
 	end CoffeeMachineSystem.impl;
 
 
+	data MonochromaticImage
+			properties
+				Data_Size => 1024 Bytes;
+			end MonochromaticImage;
 	process Controller			
 		
 		features
@@ -123,7 +127,7 @@ public
 			data_Temperature_top_in: in data port base_types::Float;
 			data_Temperature_bottom_in: in data port base_types::Float;
 			data_Temperature_center_in: in data port base_types::Float;
-			image_data: out data port;
+			image_data: out data port MonochromaticImage;
 			empty_WaterTank_in: in event port;
 			empty_BeanContainer_in: in event port;
 			full_WasteTankSensor_in: in event port;
@@ -181,7 +185,7 @@ public
 
 	thread UserInterfaceManager
 		features
-			image_data: out data port;
+			image_data: out data port MonochromaticImage;
 			button_up_in: in event port;
 			button_down_in: in event port;
 			button_select_in: in event port;
@@ -300,7 +304,7 @@ public
 
 	device OledScreen
 		features
-			image_data: in data port;
+			image_data: in data port MonochromaticImage;
 			refresh: in event port;
 			bus_spi: requires bus access buses::spi;
 	end OledScreen;
